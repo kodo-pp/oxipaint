@@ -84,6 +84,7 @@ fn build_content() -> ScrolledWindow {
         let mut lock = canvas_renderer_copy.write().unwrap();
         lock.set_size_allocation(allocation_width, allocation_height);
         let (min_width, min_height) = lock.min_total_size();
+        drop(lock);
         drawing_area.set_size_request(min_width as i32, min_height as i32);
     });
 
