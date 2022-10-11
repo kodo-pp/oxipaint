@@ -1,3 +1,6 @@
+mod canvas;
+mod color;
+mod render;
 mod ui;
 
 use gtk::prelude::*;
