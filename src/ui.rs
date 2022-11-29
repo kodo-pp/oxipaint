@@ -5,7 +5,7 @@ use gtk::{
     Application, ApplicationWindow, Box as GtkBox, DrawingArea, HeaderBar, Inhibit, Label, MenuBar,
     MenuItem, Orientation, Paned, ScrolledWindow, Widget,
 };
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex};
 
 const MENU_BAR_PADDING: i32 = 0;
 const HEADER_BAR_PADDING: i32 = 0;
@@ -73,15 +73,15 @@ fn build_toolspace(top: &impl IsA<Widget>, bottom: &impl IsA<Widget>) -> Paned {
 fn build_content() -> ScrolledWindow {
     let drawing_area = DrawingArea::new();
 
-    let canvas = Arc::new(RwLock::new(Canvas::new(800, 600)));
-    let canvas_renderer = Arc::new(RwLock::new(CanvasRenderer::new(canvas, 0, 0)));
+    let canvas = Arc::new(Mutex::new(Canvas::new(800, 600)));
+    let canvas_renderer = Arc::new(Mutex::new(CanvasRenderer::new(canvas, 0, 0)));
 
     let canvas_renderer_copy = Arc::clone(&canvas_renderer);
     drawing_area.connect_size_allocate(move |drawing_area, allocation| {
         let allocation_width = allocation.width() as u32;
         let allocation_height = allocation.height() as u32;
 
-        let mut lock = canvas_renderer_copy.write().unwrap();
+        let mut lock = canvas_renderer_copy.lock().unwrap();
         lock.set_size_allocation(allocation_width, allocation_height);
         let (min_width, min_height) = lock.min_total_size();
         drop(lock);
@@ -89,7 +89,7 @@ fn build_content() -> ScrolledWindow {
     });
 
     drawing_area.connect_draw(move |_drawing_area, cairo| {
-        canvas_renderer.read().unwrap().draw(cairo);
+        canvas_renderer.lock().unwrap().draw(cairo);
         Inhibit(false)
     });
 

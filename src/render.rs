@@ -1,13 +1,13 @@
 use crate::canvas::Canvas;
 use crate::color::FloatRgbColor;
 use cairo::Context as CairoContext;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex};
 
 const BACKGROUND_COLOR: FloatRgbColor = FloatRgbColor::new(0.9, 0.9, 0.9);
 const MIN_MARGIN_SIZE: u32 = 50;
 
 pub struct CanvasRenderer {
-    canvas: Arc<RwLock<Canvas>>,
+    canvas: Arc<Mutex<Canvas>>,
     allocation_width: u32,
     allocation_height: u32,
 }
@@ -25,7 +25,7 @@ struct MarginGeometry {
 }
 
 impl CanvasRenderer {
-    pub fn new(canvas: Arc<RwLock<Canvas>>, allocation_width: u32, allocation_height: u32) -> Self {
+    pub fn new(canvas: Arc<Mutex<Canvas>>, allocation_width: u32, allocation_height: u32) -> Self {
         Self {
             canvas,
             allocation_width,
@@ -64,7 +64,7 @@ impl CanvasRenderer {
     }
 
     fn canvas_geometry(&self) -> CanvasGeometry {
-        let lock = self.canvas.read().unwrap();
+        let lock = self.canvas.lock().unwrap();
         let canvas_width = lock.width();
         let canvas_height = lock.height();
 
