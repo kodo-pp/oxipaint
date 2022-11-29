@@ -1,8 +1,11 @@
+use crate::canvas::Canvas;
+use crate::render::CanvasRenderer;
 use gtk::prelude::*;
 use gtk::{
-    Application, ApplicationWindow, Box as GtkBox, DrawingArea, HeaderBar, Label, MenuBar,
-    MenuItem, Orientation, Paned, Widget,
+    Application, ApplicationWindow, Box as GtkBox, DrawingArea, HeaderBar, Inhibit, Label, MenuBar,
+    MenuItem, Orientation, Paned, ScrolledWindow, Widget,
 };
+use std::sync::{Arc, Mutex};
 
 const MENU_BAR_PADDING: i32 = 0;
 const HEADER_BAR_PADDING: i32 = 0;
@@ -67,6 +70,35 @@ fn build_toolspace(top: &impl IsA<Widget>, bottom: &impl IsA<Widget>) -> Paned {
     toolspace
 }
 
+fn build_content() -> ScrolledWindow {
+    let drawing_area = DrawingArea::new();
+
+    let canvas = Arc::new(Mutex::new(Canvas::new(800, 600)));
+    let canvas_renderer = Arc::new(Mutex::new(CanvasRenderer::new(canvas, 0, 0)));
+
+    let canvas_renderer_copy = Arc::clone(&canvas_renderer);
+    drawing_area.connect_size_allocate(move |drawing_area, allocation| {
+        let allocation_width = allocation.width() as u32;
+        let allocation_height = allocation.height() as u32;
+
+        let mut lock = canvas_renderer_copy.lock().unwrap();
+        lock.set_size_allocation(allocation_width, allocation_height);
+        let (min_width, min_height) = lock.min_total_size();
+        drop(lock);
+        drawing_area.set_size_request(min_width as i32, min_height as i32);
+    });
+
+    drawing_area.connect_draw(move |_drawing_area, cairo| {
+        canvas_renderer.lock().unwrap().draw(cairo);
+        Inhibit(false)
+    });
+
+    const NO_ADJUSTMENT: Option<&gtk::Adjustment> = None;
+    let scrolled_window = ScrolledWindow::new(NO_ADJUSTMENT, NO_ADJUSTMENT);
+    scrolled_window.add(&drawing_area);
+    scrolled_window
+}
+
 fn build_workspace() -> Paned {
     let paned_left_rest = Paned::new(Orientation::Horizontal);
     let paned_mid_right = Paned::new(Orientation::Horizontal);
@@ -78,7 +110,7 @@ fn build_workspace() -> Paned {
 
     let left_toolspace = build_toolspace(&drawing_tool_window, &color_selection_window);
     let right_toolspace = build_toolspace(&layers_window, &history_window);
-    let content = DrawingArea::new();
+    let content = build_content();
 
     const TOOLSPACE_RESIZE: bool = false;
     const TOOLSPACE_SHRINK: bool = false;
