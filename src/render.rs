@@ -96,10 +96,10 @@ impl CanvasRenderer {
         canvas_geometry: CanvasGeometry,
         margin_geometry: MarginGeometry,
     ) {
-        let base_x = margin_geometry.width as f64;
-        let base_y = margin_geometry.height as f64;
-        let base_width = canvas_geometry.width as f64;
-        let base_height = canvas_geometry.height as f64;
+        let base_x = f64::from(margin_geometry.width);
+        let base_y = f64::from(margin_geometry.height);
+        let base_width = f64::from(canvas_geometry.width);
+        let base_height = f64::from(canvas_geometry.height);
 
         // (pixel offset, shade strength) pairs.
         let shadow = [(0.5, 0.6), (1.5, 0.3), (2.5, 0.15)];
@@ -110,8 +110,8 @@ impl CanvasRenderer {
             cairo.rectangle(
                 base_x - offset,
                 base_y - offset,
-                base_width + 2.0 * offset,
-                base_height + 2.0 * offset,
+                offset.mul_add(2.0, base_width),
+                offset.mul_add(2.0, base_height),
             );
             cairo.stroke().unwrap();
         }
@@ -126,10 +126,10 @@ impl CanvasRenderer {
         // TODO: actual image.
         cairo.set_source_rgb(1.0, 1.0, 1.0);
 
-        let x = margin_geometry.width as f64;
-        let y = margin_geometry.height as f64;
-        let width = canvas_geometry.width as f64;
-        let height = canvas_geometry.height as f64;
+        let x = f64::from(margin_geometry.width);
+        let y = f64::from(margin_geometry.height);
+        let width = f64::from(canvas_geometry.width);
+        let height = f64::from(canvas_geometry.height);
         cairo.rectangle(x, y, width, height);
         cairo.fill().unwrap();
     }
