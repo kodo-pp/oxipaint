@@ -78,8 +78,8 @@ fn build_content() -> ScrolledWindow {
 
     let canvas_renderer_copy = Arc::clone(&canvas_renderer);
     drawing_area.connect_size_allocate(move |drawing_area, allocation| {
-        let allocation_width = allocation.width() as u32;
-        let allocation_height = allocation.height() as u32;
+        let allocation_width = u32::try_from(allocation.width()).unwrap();
+        let allocation_height = u32::try_from(allocation.height()).unwrap();
 
         let mut lock = canvas_renderer_copy.lock().unwrap();
         lock.set_size_allocation(allocation_width, allocation_height);
